@@ -2,7 +2,7 @@
 '''
 Get coalescent times based on transmission network and time tree with labeled internal nodels 
 '''
-import treeswift
+import treeswift #https://niema.net/TreeSwift/
 import os
 import subprocess
 import numpy as np
@@ -127,7 +127,7 @@ def clade_size(tree):
         for c in n.children:
             n.clade_size += c.clade_size
                 
-                
+'''
 def mutation_simulation(n, mutations = [], size=29903, factor = 1, max_mutations = 3):
     # simulate mutations along each branch
     if n.is_root():
@@ -149,7 +149,34 @@ def mutation_simulation(n, mutations = [], size=29903, factor = 1, max_mutations
             
         for child in n.children:
             mutation_simulation(child, n.mutations.copy(), factor=factor)
+'''
 
+def mutation_simulation(n, mutations = [], size=29903, factor = 1, max_mutations = 3):
+    # simulate mutations along each branch of the transmission tree
+    # mutations are generated at every node of the tree but root where it's initialized to []
+    if n.is_root():
+        # if root than no mutations
+        n.mutations = []
+    else:
+        # else add random mutations
+        ''' S.W.:
+            not sure what edge_length is but it weighs on the # of mutations
+            edge_length is probably in the 1E-5 in order to keep the # of mutations lower than 3
+            not sure why the use of getrandbit() - 
+                where is the number limited to genome length (29903)? (ex. random.getrandbits(16)%29903 ?)
+                where/how is the single nucleotide mutation defined?
+            Keeping original code due to lack of understanding expressed above
+        '''
+        n.mutations = mutations
+        edge_length = n.get_edge_length()*factor
+        for x in range(rng.poisson(size * edge_length)): # replaced hard-coded '29903' with corresponding param
+            n.mutations.append(random.getrandbits(16))
+    # mutations are passed down to children to recursively generate more
+    if not n.is_leaf():
+        # 'if' may speedup the process but can be removed as empty 'n.children' would do
+        for child in n.children:
+            mutation_simulation(child, n.mutations.copy(), factor=factor)
+    
             
 def get_mutation_clades(n, num_mutations, root_mutations=0, include_unmutated_leaves=False):
     '''
